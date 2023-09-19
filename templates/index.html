@@ -1,0 +1,22 @@
+<h1>Hello Word!</h1>
+
+<p> Essa é minha primeira página!</p>
+
+<p>Meu nome é {{ primeiro_nome }}</p>
+
+<p>{{ usando_safe|safe }}</p>
+
+<h3>Pizza favorita</h3>
+
+{% for topping in pizza_favorita %}
+
+    {% if topping == 41 %}
+        {{topping + 100 }}</br>
+    {% else %}
+        {{ topping }}</br>
+    {% endif %}
+{% endfor %}
+
+<br/><br/>
+
+<!--{{ pizza_favorita.3 + 10 }} --> <!-- se colocar .1 é a queijo, .2 é a carne e assim por diante e como nosso ultimo cadastro é um numero, podemos somar se colocarmos +10 por exemplo -->

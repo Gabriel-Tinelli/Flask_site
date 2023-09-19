@@ -1,0 +1,9 @@
+#jinja2 é uma biblioteca muito boa para modelagem  |
+
+scripts/activate - ativa o scripts 
+
+chave ssh publica:
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCswaw0fVLVNmkRQo3PsUXkPFg7MvAtZu8ZlFRk7oSmd3v+gcirIDtOyju+mP16J+kRdIoNRUBiwzScZIpv+fmn3V56ai/a6tc3P/vrUmT554/JWHChUa6OVFOKyDBcf1+mPnakWqEOooX+chDiw4L85LElMmgyK0n0AYjwbl3BSOA4EU9jY1RZMFFhH4Y4efcAueooxy59q2NXH0+k6TgAnP1zX0PUOiymb8lhD18efktIsC8CV6/kpG9ydJWVWUIRD0zZ/Bgn21gBZWsIOB2HFBO6p4udZbybehZNmNZHUjUMZNabnBA+xSUSuvK/MWZeOtPFgBA2UIcSRA+2cQpR administrator@WIN-VL2CMU4LAST
+
+cd ~/ - volta uma pasta
