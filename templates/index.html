@@ -1,22 +1,27 @@
-<h1>Hello Word!</h1>
+{% extends 'base.html'%}
+{% block content %}
 
-<p> Essa é minha primeira página!</p>
+    <h1>Hello Word!</h1>
 
-<p>Meu nome é {{ primeiro_nome }}</p>
+    <p> Essa é minha primeira página!</p>
 
-<p>{{ usando_safe|safe }}</p>
+    <p>Meu nome é {{ primeiro_nome }}</p>
 
-<h3>Pizza favorita</h3>
+    <p>{{ usando_safe|safe }}</p>
 
-{% for topping in pizza_favorita %}
+    <h3>Pizza favorita</h3>
 
-    {% if topping == 41 %}
-        {{topping + 100 }}</br>
-    {% else %}
-        {{ topping }}</br>
-    {% endif %}
-{% endfor %}
+    {% for topping in pizza_favorita %}
 
-<br/><br/>
+        {% if topping == 41 %}
+            {{topping + 100 }}</br>
+        {% else %}
+            {{ topping }}</br>
+        {% endif %}
+    {% endfor %}
+
+    <br/><br/>
+
+{% endblock %}
 
 <!--{{ pizza_favorita.3 + 10 }} --> <!-- se colocar .1 é a queijo, .2 é a carne e assim por diante e como nosso ultimo cadastro é um numero, podemos somar se colocarmos +10 por exemplo -->
