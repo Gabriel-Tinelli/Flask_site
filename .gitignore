@@ -1,3 +1,5 @@
 .gitinore
 
 virt/
+__pycache__/hello.cpython-310.pyc
+static/images/4ce91270-2673-4485-ab78-295757413572.jpg

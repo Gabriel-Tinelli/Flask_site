@@ -1,0 +1,1 @@
+document.getElementById('demo').innerHTML = "Isso foi criado por um Javascript";
