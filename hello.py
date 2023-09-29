@@ -1,8 +1,9 @@
-from flask import Flask, render_template, flash
+from flask import Flask, render_template, flash, request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import datetime
 
 
@@ -21,17 +22,19 @@ app = Flask(__name__) #__nome__ -> isto ajuda o flask a encontrar todos os nosso
 #NOVO SQL DB! (MySQL DB)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:admin@localhost/users'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 #Secret KEY
 app.config['SECRET_KEY'] = 'essa é uma chave super secreta contra todo o mal do mundo!' #essa chave é uma forma de proteção do seu formulário, garantindo que a sincronização nos bastidores, para não haver nenhum tipode invasão e desvio de formulário 
 #Inicializando  database
-
 
 #criando modelo
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False) #é um campo que não pode ficar nulo 'nullable=False'
     email = db.Column(db.String(120), nullable=False, unique=True) #é um campo que não pode ficar nulo 'nullable=False' e não pode ter mais que 1 'unique=True'
+    favorite_color = db.Column(db.String(20))
     date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow())
+    
 #criando string
     def __repr__(self):
         return '<Name %r>' % self.name
@@ -50,8 +53,27 @@ class UserForm(FlaskForm):
     name = StringField('Nome', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
     submit = SubmitField('Enviar')
+    favorite_color = StringField('Cor Favorita')
 
-
+#Update Database
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def uptade(id):
+    form = UserForm()
+    name_to_update = Users.query.get_or_404(id)
+    if request.method == 'POST':
+        name_to_update.name = request.form['name']
+        name_to_update.email = request.form['email']
+        name_to_update.favorite_color = request.form['favorite_color']
+        try:
+            db.session.commit()
+            flash('Usuário atualizado com sucesso!')
+            return render_template('update.html', form=form, name_to_update=name_to_update)
+        except:
+            db.session.commit()
+            flash('Houve um problema, tente novamente!')
+            return render_template('update.html', form=form, name_to_update=name_to_update)
+    else:
+        return render_template('update.html', form=form, name_to_update=name_to_update)
 
 
 #criando rota
@@ -63,14 +85,16 @@ def add_user():
     if form.validate_on_submit():
         user = Users.query.filter_by(email=form.email.data).first()
         if user is None:
-            user = Users(name=form.name.data, email=form.email.data)
+            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
         form.name.data = ''
         form.email.data = ''
+        form.favorite_color.data = ''
         flash('Usuário adicionado com sucesso!')
     users = Users.query.order_by(Users.date_added)
+
 
     return render_template('add_user.html', form=form, name=name, users=users)
 
