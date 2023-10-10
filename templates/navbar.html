@@ -13,13 +13,16 @@
         <li class="nav-item">
           <a class="nav-link" href="{{url_for('name')}}" style="color: #ffffff;">Nome</a><!--href é a url -->
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{url_for('posts')}}" style="color: #ffffff;">Posts</a><!--href é a url -->
+        </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff;">
             Dropdown
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{url_for('add_user')}}" style="color: #010000;">Usuários</a></li>
-            <li><a class="dropdown-item" href="#" style="color: #000000;">Another action</a></li>
+            <li><a class="dropdown-item" href="{{url_for('add_post')}}" style="color: #000000;">Adicionar Post</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" style="color: #050202;">Something else here</a></li>
           </ul>
