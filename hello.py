@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
@@ -90,7 +90,32 @@ def posts():
 
     return render_template('posts.html', posts=posts)
 
-    #adicionando pagina de postagem
+    
+
+@app.route('/posts/delete/<int:id>')
+def delete_post(id):
+        post_to_delete = Posts.query.get_or_404(id)
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            flash('Post deletado com sucesso!')
+
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template('posts.html', posts=posts)
+            
+                
+        except:
+            flash('Ops, tivemos um problema, tente novamente!')
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template('posts.html', posts=posts)
+
+
+
+
+@app.route('/posts/<int:id>')
+def post(id):
+    post = Posts.query.get_or_404(id)
+    return render_template('post.html', post=post)
 
 @app.route('/add-post', methods=['GET', 'POST'])
 def add_post():
@@ -190,6 +215,27 @@ def uptade(id):
 
 
 #criando rota
+
+@app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+def edit_post(id):
+    post = Posts.query.get_or_404(id)
+    form = PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.author = form.author.data
+        post.slug = form.slug.data
+        post.content = form.content.data
+        #update no db
+        db.session.add(post)
+        db.session.commit()
+        flash('Post atualizado com sucesso!')
+        return redirect(url_for('post', id=post.id,))
+    form.title.data = post.title
+    form.author.data = post.author
+    form.slug.data = post.slug
+    form.content.data = post.content
+    return render_template('edit_post.html',form=form)
+
 
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():

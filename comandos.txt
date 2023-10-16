@@ -1,6 +1,11 @@
 #jinja2 é uma biblioteca muito boa para modelagem  |
 
+Site_Flask
+Site com flask gringo
+
 scripts/activate - ativa o scripts 
+
+flask shell --app app.py
 
 chave ssh publica:
 

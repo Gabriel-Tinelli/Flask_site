@@ -11,3 +11,8 @@ migrations/script.py.mako
 migrations/__pycache__/env.cpython-310.pyc
 migrations/versions/2324373c106b_migracao_inicial.py
 migrations/versions/__pycache__/2324373c106b_migracao_inicial.cpython-310.pyc
+comandos.txt
+migrations/versions/3e793fb8a255_adicionando_password.py
+migrations/versions/__pycache__/3e793fb8a255_adicionando_password.cpython-310.pyc
+comandos.txt
+saida.txt

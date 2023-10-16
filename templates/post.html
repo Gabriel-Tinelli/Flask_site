@@ -3,7 +3,7 @@
 
 {% for message in get_flashed_messages() %}
 <div class="alert alert-dark alert-dismissible fade show" role="alert">
-    {{ message }}
+    Hey {{name}} {{ message }}
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
@@ -14,24 +14,21 @@
 <h1>Blog Posts</h1>
 <br/><br/>
 
-{% for post in posts %}
+
 <div class="shadow p-3 mb-5 bg-body rounded">
 
-<h2><a href="{{ url_for('post', id=post.id)}}">{{ post.title }}</a></h2><br/>
+<h2>{{ post.title }}</h2><br/>
 By: {{ post.author }}<br/>
 {{ post.slug }}<br/>
 {{ post.date_posted }}<br/>
 {{ post.content }}<br/><br/>
-<a href="{{ url_for('post' , id=post.id)  }}" class="btn btn-outline-secondary btn-sm">Ver Post</a>
-
-<a href="{{ url_for('edit_post' , id=post.id)  }}" class="btn btn-outline-secondary btn-sm">Editar Post</a>
+<a href="{{ url_for('posts') }}" class="btn btn-outline-secondary btn-sm">Voltar</a>
 <a href="{{ url_for('delete_post' , id=post.id)  }}" class="btn btn-outline-danger btn-sm">Deletar Post</a>
-
 <br/>
 </div>
 <br/>
 
-{% endfor %}
+
 
 
 {% endblock %}
