@@ -7,6 +7,13 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{url_for('logout')}}" style="color: #0edfa7;">Sair</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{url_for('dashboard')}}" style="color: #ffffff;">Perfil</a>
+        </li>
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="{{url_for('index')}}" style="color: #ffffff;">Home</a>
         </li>
@@ -18,15 +25,28 @@
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #ffffff;">
-            Dropdown
+            Mais
           </a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="{{url_for('add_user')}}" style="color: #010000;">Usuários</a></li>
+            
             <li><a class="dropdown-item" href="{{url_for('add_post')}}" style="color: #000000;">Adicionar Post</a></li>
+            <li><a class="dropdown-item" href="#" style="color: #000000;">none</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#" style="color: #050202;">Something else here</a></li>
+            
           </ul>
         </li>
+
+        {% else %}
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{url_for('login')}}" style="color: #0edfa7;">Entrar</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{{url_for('add_user')}}" style="color: #0edfa7;">Registrar</a>
+        </li>
+
+        {% endif %}
+
       </ul>
       <form class="d-flex" role="search">
         <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">

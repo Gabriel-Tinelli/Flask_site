@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 
 
 
@@ -44,8 +45,9 @@ class Posts(db.Model):
 
 
 #criando modelo
-class Users(db.Model):
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(50), nullable=False) #é um campo que não pode ficar nulo 'nullable=False'
     email = db.Column(db.String(120), nullable=False, unique=True) #é um campo que não pode ficar nulo 'nullable=False' e não pode ter mais que 1 'unique=True'
     favorite_color = db.Column(db.String(20))
@@ -118,6 +120,7 @@ def post(id):
     return render_template('post.html', post=post)
 
 @app.route('/add-post', methods=['GET', 'POST'])
+#@login_required - outra maneira no add_post.html
 def add_post():
     form = PostForm()
 
@@ -165,15 +168,74 @@ class PasswordForm(FlaskForm):
 
 class UserForm(FlaskForm):
     name = StringField('Nome', validators=[DataRequired()])
+    username = StringField('Nome do Usuário', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
     favorite_color = StringField('Cor Favorita')
     password_hash = PasswordField('Senha',validators=[DataRequired(), EqualTo('password_hash2', message='As senhas precisam ser iguais!')])
     password_hash2 = PasswordField('Confirmar Senha',validators=[DataRequired()])
     submit = SubmitField('Enviar')
 
+#Login flask stuff
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+#criando login form
+
+class LoginForm(FlaskForm):
+    username = StringField('Nome do Usuário', validators=[DataRequired()])
+    password = PasswordField('Senha',validators=[DataRequired()])
+    submit = SubmitField('Entrar')
+
+
+#criando Login page
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            #check o hash
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)
+                flash('Login efetuado com sucesso!')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Senha incorreta, tente novamente')
+        else:
+            flash('Usuário incorreto, tente novamente')
+    
+    return render_template('login.html', form=form)
+
+#Criando logout page
+
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    flash('Você foi desconectado')
+    return redirect(url_for('login'))
+
+
+#criando dashboard page
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+
+    return render_template('dashboard.html')
+
 
 #Criando função delete
 @app.route('/delete/<int:id>')
+@login_required
 def delete(id):
     user_to_delete = Users.query.get_or_404(id)
     name = None
@@ -202,10 +264,11 @@ def uptade(id):
         name_to_update.name = request.form['name']
         name_to_update.email = request.form['email']
         name_to_update.favorite_color = request.form['favorite_color']
+        name_to_update.username = request.form['username']
         try:
             db.session.commit()
             flash('Usuário atualizado com sucesso!')
-            return render_template('update.html', form=form, name_to_update=name_to_update)
+            return render_template('update.html', form=form, name_to_update=name_to_update, id=id)
         except:
             db.session.commit()
             flash('Houve um problema, tente novamente!')
@@ -217,6 +280,7 @@ def uptade(id):
 #criando rota
 
 @app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+#@login_required
 def edit_post(id):
     post = Posts.query.get_or_404(id)
     form = PostForm()
@@ -246,11 +310,21 @@ def add_user():
         if user is None:
             #hash password
             hashed_pw = generate_password_hash(form.password_hash.data, 'sha256')
-            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, password_hash=hashed_pw)
+            user = Users(
+
+                         username= form.username.data, 
+                         name=form.name.data, 
+                         email=form.email.data, 
+                         favorite_color=form.favorite_color.data, 
+                         password_hash=hashed_pw
+                         
+                         )
+            
             db.session.add(user)
             db.session.commit()
         name = form.name.data
         form.name.data = ''
+        form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
         form.password_hash = ''

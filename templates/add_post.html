@@ -11,6 +11,7 @@
 
 {% endfor %}
 
+{% if current_user.is_authenticated %}
 
 <h1>Adicionar Post...</h1>
 <br />
@@ -37,8 +38,13 @@
 </form>
 
 
+{% else %}
 
+<h2>Você precisa estar conectado!</h2>
+<p>Desculpe, você precosa realizar o login para acessar essa página</p>
 
+<a href="{ url_for('login') }">Realizar o login</a>
 
+{% endif %}
 
 {% endblock %}

@@ -11,8 +11,11 @@
 
 {% endfor %}
 
+{% if current_user.is_authenticated %}
+
 <h1>Blog Posts</h1>
 <br/><br/>
+
 
 
 <div class="shadow p-3 mb-5 bg-body rounded">
@@ -43,6 +46,14 @@
 </div>
 <br/>
 
+{% else %}
+
+<h2>Você precisa estar conectado!</h2>
+<p>Desculpe, você precisa realizar o login para acessar essa página</p>
+
+<a href="{ url_for('login') }">Realizar o login</a>
+
+{% endif %}
 
 
 

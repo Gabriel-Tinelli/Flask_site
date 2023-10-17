@@ -40,13 +40,16 @@
 <br /><br />
 
 {% else %}
-<h1>Lista de Usuários</h1>
+<h1>Novo usuário</h1>
 <br />
 <form method="POST">
     {{ form.hidden_tag() }}
 
     {{ form.name.label(class="form-label") }}
     {{ form.name(class="form-control") }}
+    <br/>
+    {{ form.username.label(class="form-label") }}
+    {{ form.username(class="form-control") }}
     <br/>
     {{ form.email.label(class="form-label") }}
     {{ form.email(class="form-control") }}
@@ -74,6 +77,7 @@
         <tr>
             <th scope="col">Id</th>
             <th scope="col">Nome</th>
+            <th scope="col">Username</th>
             <th scope="col">Email</th>
             <th scope="col">Cor Favorita</th>
         </tr>
@@ -83,6 +87,7 @@
         <tr>
             <th scope="row">{{ user.id }}</th>
             <td><a href="{{ url_for('uptade', id=user.id)}}">{{ user.name }}</a></td>
+            <td>{{ user.username }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.favorite_color }} - <a href="{{ url_for('delete', id=user.id)}}">Excluir</a></td>
             <td>PW: {{ user.password_hash }}</td>
