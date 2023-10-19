@@ -11,6 +11,9 @@
 
 {% endfor %}
 
+{% if id == current_user.id %}
+
+
 {% if name %}
 <h1>Atualização de Usuário</h1>
 <br /><br /><br />
@@ -67,6 +70,13 @@
 </form>
 
 
+{% endif %}
+
+{% else %}
+<div class="alert alert-dark alert-dismissible fade show" role="alert">
+    Desculpe! Você não pode editar este usuário!
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
 {% endif %}
 
 {% endblock %}

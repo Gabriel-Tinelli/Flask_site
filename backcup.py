@@ -1,30 +1,47 @@
 from flask import Flask, render_template, flash, request, redirect, url_for
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
+from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms.widgets import TextArea
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, UserForm, NameForm, PostForm, PasswordForm
 
+
+
+
+
+
+#safe -> não expoem o html da frase (vai deixar em negrito)
+#striptags -> retira o html da frase (não vai deixar negrito)
+#title -> toda primeira letra da frase será maiscula
+#trim -> removera os espaços antes e depois da frase
+#upper -> tudo maisculo
+#capitalize -> tudo minusculo
 
 #Criando instância do flask
 app = Flask(__name__) #__nome__ -> isto ajuda o flask a encontrar todos os nossos arquivos, sempre inicie um projeto flask assim
+#adicionando database
+#Antigo SQL db
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///usuarios.db'
+#NOVO SQL DB! (MySQL DB)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:admin@localhost/users'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 #Secret KEY
 app.config['SECRET_KEY'] = 'essa é uma chave super secreta contra todo o mal do mundo!' #essa chave é uma forma de proteção do seu formulário, garantindo que a sincronização nos bastidores, para não haver nenhum tipode invasão e desvio de formulário 
-
+#Inicializando  database
 
 #Criando modelo de blog com post
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    #author = db.Column(db.String(255))
+    author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     slug = db.Column(db.String(255))
-    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 
 #criando modelo
@@ -37,8 +54,6 @@ class Users(db.Model, UserMixin):
     date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow())
     # Do some password stuff!
     password_hash = db.Column(db.String(128)) #um hash  é uma representação irreversível da senha original, não é seguro armazenar senhas em texto simples
-    posts = db.relationship('Posts', backref='poster')
-
 
     @property #decorador property e um metodo getter chamado password. É utilizado para não tornar legivel a propriedade 'password'
     #Isso significa que não podemos acessar a senha original diretamente através desta propriedade
@@ -61,24 +76,12 @@ class Users(db.Model, UserMixin):
 #user.verify_password("senha"), o self é automaticamente preenchido com a instância do objeto user.
 #password é usado como um nome de propriedade, um nome de método e um nome de atributo. É uma escolha de nome para representar a senha dos usuários.
 
-
-#Login flask stuff
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Users.query.get(int(user_id))
-
-#criando string
-
-def __repr__(self):
-        return '<Name %r>' % self.name
-
-app.app_context().push()
-db.create_all()
+class PostForm(FlaskForm):
+    title = StringField('Título', validators=[DataRequired()])
+    content = StringField('Conteúdo', validators=[DataRequired()], widget=TextArea())
+    author = StringField('Autor', validators=[DataRequired()])
+    slug = StringField('Slug', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
 
 
 @app.route('/posts')
@@ -92,30 +95,24 @@ def posts():
     
 
 @app.route('/posts/delete/<int:id>')
-@login_required
 def delete_post(id):
         post_to_delete = Posts.query.get_or_404(id)
-        id = current_user.id
-        if id == post_to_delete.poster.id:         
-            try:
-                db.session.delete(post_to_delete)
-                db.session.commit()
-                flash('Post deletado com sucesso!')
-
-                posts = Posts.query.order_by(Posts.date_posted)
-                return render_template('posts.html', posts=posts)
-                
-                    
-            except:
-                flash('Ops, tivemos um problema, tente novamente!')
-                posts = Posts.query.order_by(Posts.date_posted)
-                return render_template('posts.html', posts=posts)
-        else:
-            flash('Você não está autorizado!')
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+            flash('Post deletado com sucesso!')
 
             posts = Posts.query.order_by(Posts.date_posted)
             return render_template('posts.html', posts=posts)
+            
                 
+        except:
+            flash('Ops, tivemos um problema, tente novamente!')
+            posts = Posts.query.order_by(Posts.date_posted)
+            return render_template('posts.html', posts=posts)
+
+
+
 
 @app.route('/posts/<int:id>')
 def post(id):
@@ -128,12 +125,11 @@ def add_post():
     form = PostForm()
 
     if form.validate_on_submit():
-        poster = current_user.id
-        post = Posts(title=form.title.data, content=form.content.data, poster_id=poster, slug=form.slug.data)
+        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
         #criando formulário
         form.title.data = ''
         form.content.data = ''
-        #form.author.data = ''
+        form.author.data = ''
         form.slug.data = ''
 
         #adicionando post no db
@@ -147,6 +143,56 @@ def add_post():
         
 
     return render_template('add_post.html', form=form)
+    
+
+#criando string
+
+def __repr__(self):
+        return '<Name %r>' % self.name
+
+app.app_context().push()
+db.create_all()
+
+
+# criando uma classe de formulário 
+
+class NameForm(FlaskForm):
+    name = StringField('Qual é o seu nome?', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
+
+class PasswordForm(FlaskForm):
+    email = StringField('E-mail', validators=[DataRequired()])
+    password_hash = PasswordField('Senha', validators=[DataRequired()])
+    submit = SubmitField('Enviar')
+
+
+class UserForm(FlaskForm):
+    name = StringField('Nome', validators=[DataRequired()])
+    username = StringField('Nome do Usuário', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
+    favorite_color = StringField('Cor Favorita')
+    password_hash = PasswordField('Senha',validators=[DataRequired(), EqualTo('password_hash2', message='As senhas precisam ser iguais!')])
+    password_hash2 = PasswordField('Confirmar Senha',validators=[DataRequired()])
+    submit = SubmitField('Enviar')
+
+#Login flask stuff
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
+
+#criando login form
+
+class LoginForm(FlaskForm):
+    username = StringField('Nome do Usuário', validators=[DataRequired()])
+    password = PasswordField('Senha',validators=[DataRequired()])
+    submit = SubmitField('Entrar')
+
 
 #criando Login page
 
@@ -211,7 +257,6 @@ def delete(id):
 
 #Update Database
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
-@login_required
 def uptade(id):
     form = UserForm()
     name_to_update = Users.query.get_or_404(id)
@@ -241,7 +286,7 @@ def edit_post(id):
     form = PostForm()
     if form.validate_on_submit():
         post.title = form.title.data
-        #post.author = form.author.data
+        post.author = form.author.data
         post.slug = form.slug.data
         post.content = form.content.data
         #update no db
@@ -249,18 +294,11 @@ def edit_post(id):
         db.session.commit()
         flash('Post atualizado com sucesso!')
         return redirect(url_for('post', id=post.id,))
-    if current_user. id == post.poster_id:
-
-        form.title.data = post.title
-        #form.author.data = post.author
-        form.slug.data = post.slug
-        form.content.data = post.content
-        return render_template('edit_post.html',form=form)
-    else:
-        flash('Você não está autorizado!')
-
-        posts = Posts.query.order_by(Posts.date_posted)
-        return render_template('posts.html', posts=posts)
+    form.title.data = post.title
+    form.author.data = post.author
+    form.slug.data = post.slug
+    form.content.data = post.content
+    return render_template('edit_post.html',form=form)
 
 
 @app.route('/user/add', methods=['GET', 'POST'])
