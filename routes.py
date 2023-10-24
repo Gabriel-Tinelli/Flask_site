@@ -1,102 +1,16 @@
-from flask import Flask, render_template, flash, request, redirect, url_for
+from flask import render_template, flash, request, redirect, url_for, Flask
+from . import app, db, Posts, Users
+from webforms import LoginForm, UserForm, NameForm, PostForm, PasswordForm
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, UserForm, NameForm, PostForm, PasswordForm, SearchForm
 
-
-#Criando instância do flask
-app = Flask(__name__) #__nome__ -> isto ajuda o flask a encontrar todos os nossos arquivos, sempre inicie um projeto flask assim
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:admin@localhost/users'
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-#Secret KEY
-app.config['SECRET_KEY'] = 'essa é uma chave super secreta contra todo o mal do mundo!' #essa chave é uma forma de proteção do seu formulário, garantindo que a sincronização nos bastidores, para não haver nenhum tipode invasão e desvio de formulário 
-
-
-#Criando modelo de blog com post
-class Posts(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.Text)
-    #author = db.Column(db.String(255))
-    date_posted = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    slug = db.Column(db.String(255))
-    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-
-#criando modelo
-class Users(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), nullable=False, unique=True)
-    name = db.Column(db.String(50), nullable=False) #é um campo que não pode ficar nulo 'nullable=False'
-    email = db.Column(db.String(120), nullable=False, unique=True) #é um campo que não pode ficar nulo 'nullable=False' e não pode ter mais que 1 'unique=True'
-    favorite_color = db.Column(db.String(20))
-    date_added = db.Column(db.DateTime, default=datetime.datetime.utcnow())
-    # Do some password stuff!
-    password_hash = db.Column(db.String(128)) #um hash  é uma representação irreversível da senha original, não é seguro armazenar senhas em texto simples
-    posts = db.relationship('Posts', backref='poster')
-
-
-    @property #decorador property e um metodo getter chamado password. É utilizado para não tornar legivel a propriedade 'password'
-    #Isso significa que não podemos acessar a senha original diretamente através desta propriedade
-    def password(self):
-        raise AttributeError('password is not a readable attribute!')#Se alguém tentar acessar user.password, uma exceção AttributeError será gerada, protegendo assim a senha original.
-    
-    @password.setter#metodo setter para a propriedade password. Quando definimos user.password = "nova_senha", este método é chamado.
-    def password(self, password):
-        self.password_hash = generate_password_hash(password) #O objetivo deste método é calcular o hash da senha fornecida e armazená-lo no campo password_hash, utilizando o generate_password_hash
-
-    def verify_password(self, password):# Este método verify_password é usado para verificar se a senha fornecida pelo usuário corresponde ao hash armazenado no banco de dados. 
-        return check_password_hash(self.password_hash, password)
-
-#setter:setter é um método em Python que permite definir o valor de um atributo de um objeto.
-#Ele é usado para controlar como os valores dos atributos são atribuídos e normalmente é usado em conjunto com o decorador @property
-
-#A palavra-chave raise é usada em Python para levantar exceções.
-#a linha raise AttributeError('password is not a readable attribute!') está levantando uma exceção do tipo AttributeError com a mensagem "password is not a readable attribute!" quando alguém tenta acessar a propriedade password. Isso é feito para proteger a senha original e impedir que alguém acesse diretamente.
-
-#user.verify_password("senha"), o self é automaticamente preenchido com a instância do objeto user.
-#password é usado como um nome de propriedade, um nome de método e um nome de atributo. É uma escolha de nome para representar a senha dos usuários.
-
-
-#Login flask stuff
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Users.query.get(int(user_id))
-
-#criando string
-
-def __repr__(self):
-        return '<Name %r>' % self.name
-
-app.app_context().push()
-db.create_all()
-
-@app.context_processor
-def base():
-    form = SearchForm()
-    return dict(form=form)
-
-@app.route('/search', methods=['POST'])
-def search():
-    form = SearchForm()
-    posts = Posts.query
-    if form.validate_on_submit():
-        #pegando conteudo que foi adicionado no formulario
-        post.searched = form.searched.data
-        #query do banco de dados
-        posts = posts.filter(Posts.content.like('%' + post.searched + ''))
-        posts = posts.order_by(Posts.title).all()
-        return render_template ('search.html', form = form, searched = post.searched, posts = posts)
-
+app = Flask(__name__)
 
 
 @app.route('/posts')
@@ -129,7 +43,7 @@ def delete_post(id):
                 posts = Posts.query.order_by(Posts.date_posted)
                 return render_template('posts.html', posts=posts)
         else:
-            flash('Você não está autorizado!')
+            flash('Você não está autorizado para deletar!')
 
             posts = Posts.query.order_by(Posts.date_posted)
             return render_template('posts.html', posts=posts)
@@ -253,7 +167,7 @@ def uptade(id):
 #criando rota
 
 @app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
-@login_required
+#@login_required
 def edit_post(id):
     post = Posts.query.get_or_404(id)
     form = PostForm()
@@ -267,18 +181,18 @@ def edit_post(id):
         db.session.commit()
         flash('Post atualizado com sucesso!')
         return redirect(url_for('post', id=post.id,))
-    if current_user. id == post.poster_id:
-
+    
+    if current_user.id == post.poster_id:
         form.title.data = post.title
         #form.author.data = post.author
         form.slug.data = post.slug
         form.content.data = post.content
         return render_template('edit_post.html',form=form)
     else:
-        flash('Você não está autorizado!')
-
+        flash('Você não está autorizado para editar!')
         posts = Posts.query.order_by(Posts.date_posted)
         return render_template('posts.html', posts=posts)
+        
 
 
 @app.route('/user/add', methods=['GET', 'POST'])
@@ -391,15 +305,4 @@ def name():
         flash('Formulário enviado com sucesso!')
 
     return render_template('name.html',name = name, form = form) #precisamos passar essas informações para a página! o Name é o name da linha 66 e o form é o da linha 67
-
-
-
-if __name__ == '__main__':
-    app.debug = True
-    app.run(host='0.0.0.0', port=5000)
-
-
-
-
-
 
